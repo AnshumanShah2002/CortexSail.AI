@@ -1,0 +1,28 @@
+# Core LLM / Agent Framework
+crewai
+langchain
+langchain-community
+langchain-core
+
+# Vector Database
+chromadb
+
+# Embeddings / LLM Providers (adjust based on what you're using)
+openai
+tiktoken
+
+# Environment Management
+python-dotenv
+
+# API Layer (if serving via API)
+fastapi
+uvicorn
+
+# Validation & Schemas
+pydantic
+
+# YAML Config Loading
+pyyaml
+
+# Optional: Async + HTTP (often required by LLM libs)
+httpx
