@@ -3,6 +3,7 @@ crewai
 langchain
 langchain-community
 langchain-core
+langchain-google-genai
 
 # Vector Database
 chromadb
