@@ -3,7 +3,6 @@
 import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
-from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 
@@ -17,17 +16,17 @@ class Settings(BaseSettings):
 
     ### Basic configuration ###
 
-    base_model_name: str = "####"
+    base_model_name: str = "gemini-2.5-flash"
     base_model_llm_temperature: float = 0.3
     model_max_tokens = 1000
 
 
-
+    ### memory flag ###
     short_term_memory_flag:bool = False
-    long_term_memor_flag:bool = False
+    long_term_memory_flag:bool = False
 
 
-    def boot_settings() -> Settings:
+    def boot_settings(self) -> Settings:
         try:
             load_dotenv()
             settings = Settings()
@@ -37,10 +36,10 @@ class Settings(BaseSettings):
             os.environ["GEMINI_API_VERSION"] = settings.gemini_api_version
 
             #To be toggled when declaring the memory config file for both types
-
+            return settings
         except Exception as e:
-            print(f"Failied to load the config with isssue as: {e}")
+            print(f"Failed to load the config with issue as: {e}")
             raise ValueError(f"Config issue occured")
         
-    settings = boot_settings() 
+settings = Settings() 
 

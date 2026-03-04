@@ -27,3 +27,6 @@ pyyaml
 
 # Optional: Async + HTTP (often required by LLM libs)
 httpx
+
+#Crew ai core package
+crewai

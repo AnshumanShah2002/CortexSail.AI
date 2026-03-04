@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from crewai import Agent, Crew, Task, LLM
 from langchain_google_genai import ChatGoogleGenerativeAI
 from crewai.memory import ShortTermMemory, LongTermMemory
-from src.configuration import settings
+from src.configuration.settings import settings
 
 load_dotenv()
 
@@ -23,8 +23,16 @@ class CrewManager:
         #         ###Conditional Memory flag check###
         #         if settings.
 
-    def initialize_llm():
+    def initialize_llm(self):
         try:
             llm = LLM(
                 model = settings.base_model_name,
+                api_version = settings.gemini_model_version,
+                temperature = settings.base_model_llm_temperature,
+                max_tokens = settings.model_max_tokens
             )
+
+            return llm
+        except Exception as e:
+            print(f'Failed to initialize the llm with issue as: {e}')
+            raise
