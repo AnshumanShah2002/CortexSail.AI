@@ -1,4 +1,4 @@
-orchestrator:
+orchestrator_agent:
   role: >
     AI workflow planner and orchestrator
   goal: >
@@ -204,7 +204,6 @@ memory_agent:
     - JSON only
     - No commentary
     - No additional fields
-
 
 response_agent:
   role: >
