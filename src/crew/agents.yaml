@@ -65,6 +65,8 @@ orchestrator_agent:
     - Do not include additional fields
     - Preserve schema structure exactly
 
+  verbose: true
+
 knowledge_agent:
   role: >
     Specialist document retrieval agent
@@ -120,6 +122,8 @@ knowledge_agent:
     - Preserve schema exactly
     - No additional fields
 
+  verbose: true
+
 reasoning_agent:
   role: >
     Policy evaluation and logical reasoning engine
@@ -161,6 +165,9 @@ reasoning_agent:
     - JSON only
     - No markdown
     - No additional fields
+
+  verbose: true
+
 memory_agent:
   role: >
     Conversational memory controller
@@ -205,6 +212,8 @@ memory_agent:
     - No commentary
     - No additional fields
 
+  verbose: true
+
 response_agent:
   role: >
     User-facing response generator
@@ -239,3 +248,5 @@ response_agent:
     - Never add unsupported claims
     - Never retrieve new information
     - Never generate irrelevant content
+
+  verbose: true
