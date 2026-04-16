@@ -5,7 +5,8 @@ from .models import(
     SourceDocument,
     RAGResponse,
     DocumentIngestRequest,
-    DocuementIngestResponse
+    DocumentIngestResponse,
+    ConfluenceDocumentFilter,
 )
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     "SourceDocument",
     "RAGResponse",
     "DocumentIngestRequest",
-    "DocuementIngestResponse"
+    "DocuementIngestResponse",
+    "ConfluenceDocumentFilter",
 ]

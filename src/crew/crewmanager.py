@@ -58,7 +58,7 @@ class CrewManager:
 
                 ###Initialize the tools in Tools folder then enable
                 all_tools = list(self.listed_mcp_tools)
-
+                
 
                 ## MCP Tools + vector store tools 
                 
@@ -69,7 +69,7 @@ class CrewManager:
                     role = orchestrator_config["role"],
                     goal = orchestrator_config["goal"],
                     backstory = orchestrator_config["backstory"],
-                    tools = all_tools
+                    tools = all_tools,
                     instructions = orchestrator_config["instructions"],
                     intent_category = orchestrator_config["intent_categories"],
                     allowed_execution_steps = orchestrator_config["allowed_execution_steps"],
@@ -78,7 +78,7 @@ class CrewManager:
                     decision_policy = orchestrator_config["decision_policy"],
                     guardrails_llm = orchestrator_config["guardrails_llm"],
                     guardrails_output = orchestrator_config["guardrails_output"],
-                    llm = self.llm
+                    llm = self.llm,
                     verbose = orchestrator_config.get('verbose', True)
                 )
 
@@ -96,7 +96,7 @@ class CrewManager:
                     llm = self.llm,
                     tools = knowledge_agent_configuration["tools"],
                     output_contract = knowledge_agent_configuration["output_contract"],
-                    verbose = knowledge_agent_configuration.get('verbose', True)
+                    verbose = knowledge_agent_configuration.get('verbose', True),
                     guardrails = knowledge_agent_configuration["guardrails"],
                     guardrails_output = knowledge_agent_configuration["guardrails_output"]
                 )
@@ -112,10 +112,8 @@ class CrewManager:
                     llm = self.llm,
                     output_contract = reasoning_agent_configuration["output_contract"],
                     tools = reasoning_agent_configuration["tools"],
-                    verbose = reasoning_agent_configuration.get('verbose', True),
                     guardrails = reasoning_agent_configuration["guardrails"],
                     guardrails_output = reasoning_agent_configuration["guardrails_output"] 
-                    verbose = reasoning_agent_configuration.get('verbose', True)
                 )
 
                 ###Memory agent (memory management tools)

@@ -1,53 +1,79 @@
-"""pydantic model for the Agentic RAG"""
+"""Pydantic models for the Agentic RAG API"""
 
 from typing import Optional
 from pydantic import BaseModel
 
+#Generic modelsdel
+
+
 class RAGQueryRequest(BaseModel):
-    """Request model for RAG query"""
-    query: str
-    session_id: Optional[str] = None
+	query: str
+	#integrate with redis then check
+	session_id: Optional[str] = None
+
 
 class RAGFilters(BaseModel):
-    """Filters for RAG query"""
-    source: Optional[str] = None
-    document_id: Optional[str] = None
-    file_name: Optional[str] = None
-    category: Optional[str] = None
-    topic: Optional[str] = None
-    author: Optional[str] = None
-    department: Optional[str] = None
-    tags: Optional[list[str]] = None
-    date_from: Optional[str] = None
-    date_to: Optional[str] = None
-    top_k: Optional[int] = None
+	"""Filters for RAG document retrieval"""
+
+	source: Optional[str] = None
+	document_id: Optional[str] = None
+	file_name: Optional[str] = None
+	category: Optional[str] = None
+	topic: Optional[str] = None
+	author: Optional[str] = None
+	department: Optional[str] = None
+	tags: Optional[list[str]] = None
+	date_from: Optional[str] = None
+	date_to: Optional[str] = None
+	top_k: Optional[int] = None
+
 
 class SourceDocument(BaseModel):
-    """Model for source document returned by RAG query"""
-    source: Optional[str] = None
-    document_id: Optional[str] = None
-    content: Optional[str] = None
-    score: Optional[float] = None
+	source: Optional[str] = None
+	document_id: Optional[str] = None
+	content: Optional[str] = None
+	score: Optional[float] = None
+
 
 class RAGResponse(BaseModel):
-    """Response model for RAG query"""
-    query: str
-    answer: str
-    source: list[SourceDocument] = []
+	query: str
+	answer: str
+	sources: list[SourceDocument] = []
+
 
 class DocumentIngestRequest(BaseModel):
-    """Request model for document ingestion"""
-    document_id: str
-    content: str
-    source: Optional[str] = None
-    file_name: str
-    department: Optional[str] = None
-    category: Optional[str] = None
-    topic: Optional[str] = None
-    author: Optional[str] = None
+	document_id: str
+	content: str
+	source: Optional[str] = None
+	file_name: Optional[str] = None
+	category: Optional[str] = None
+	topic: Optional[str] = None
+	author: Optional[str] = None
+	department: Optional[str] = None
 
-class DocuementIngestResponse(BaseModel):
-    """Response model for document ingestion"""
-    document_id: str
-    status: str
-    message: Optional[str] = None
+
+class DocumentIngestResponse(BaseModel):
+	document_id: str
+	status: str
+	message: Optional[str] = None
+
+    
+    
+###Confluence specific models for the confluence document fetcher tool
+class ConfluenceDocumentFilter(BaseModel):
+	space: Optional[str] = None
+	type: Optional[str] = "page"
+	title: Optional[str] = None
+	text: Optional[str] = None
+	label: Optional[str] = None
+	labels: Optional[list[str]] = None
+	creator: Optional[str] = None
+	contributor: Optional[str] = None
+	id: Optional[str] = None
+	parent: Optional[str] = None
+	created_after: Optional[str] = None
+	created_before: Optional[str] = None
+	lastmodified_after: Optional[str] = None
+	lastmodified_before: Optional[str] = None
+	order_by: Optional[str] = None
+

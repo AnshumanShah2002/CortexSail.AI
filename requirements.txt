@@ -28,5 +28,9 @@ pyyaml
 # Optional: Async + HTTP (often required by LLM libs)
 httpx
 
-#Crew ai core package
+# Integrations
+atlassian-python-api  # Confluence connector
+pysnow                # ServiceNow connector (optional)
+
+# Crew ai core package
 crewai

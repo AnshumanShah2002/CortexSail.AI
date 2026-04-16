@@ -1,0 +1,168 @@
+task_orchestrate:
+	description: >
+		Given the user prompt '${prompt}', optional session id '${session_id}', and
+		optional prior context '${conversation_context}', classify the intent and build
+		a deterministic execution plan.
+
+		REQUIRED BEHAVIOR:
+		1. Classify intent into exactly one of:
+			 - policy_lookup
+			 - policy_reasoning
+			 - contextual_followup
+			 - clarification_required
+		2. Return ordered execution_plan steps using only:
+			 - retrieve_documents
+			 - evaluate_policy
+			 - retrieve_memory
+			 - update_memory
+			 - generate_response
+			 - request_clarification
+		3. Select required downstream agents using only:
+			 - knowledge_agent
+			 - reasoning_agent
+			 - database_operation_agent
+			 - memory_agent
+			 - response_agent
+		4. If prompt is ambiguous, choose clarification_required and request_clarification.
+
+		DATA INTEGRITY RULES:
+		- Never fabricate intent labels.
+		- Never invent execution steps.
+		- Never return natural language commentary.
+		- Output must be valid JSON only.
+
+	expected_output: >
+		{
+			"intent": "policy_lookup | policy_reasoning | contextual_followup | clarification_required",
+			"execution_plan": ["retrieve_documents", "evaluate_policy", "generate_response"],
+			"agents_required": ["knowledge_agent", "reasoning_agent", "response_agent"]
+		}
+
+	agent: orchestrator_agent
+
+
+task_retrieve_knowledge:
+	description: >
+		Use the orchestration output from task_orchestrate to fetch relevant policy or
+		knowledge evidence from the vector index.
+
+		INPUT CONTRACT:
+		- intent and execution_plan from task_orchestrate
+		- user prompt '${prompt}'
+		- optional retrieval filters '${filters}'
+
+		RETRIEVAL RULES:
+		1. Execute semantic search only when execution_plan includes retrieve_documents.
+		2. Respect metadata filters when provided.
+		3. Return top relevant chunks only.
+		4. Preserve retrieved text exactly as returned by tools.
+		5. If no relevant chunks are found, return an empty list.
+
+		GUARDRAILS:
+		- Never summarize retrieved documents.
+		- Never infer missing policy text.
+		- Never add external knowledge.
+
+	context:
+		- task_orchestrate
+
+	expected_output: >
+		{
+			"retrieved_documents": [
+				{
+					"content": "exact chunk text",
+					"source": "document identifier",
+					"relevance_score": 0.0
+				}
+			]
+		}
+
+	agent: knowledge_agent
+
+
+task_reason_over_evidence:
+	description: >
+		Analyze retrieved evidence from task_retrieve_knowledge and produce a
+		structured policy conclusion.
+
+		REASONING RULES:
+		1. Use only retrieved_documents as evidence.
+		2. Apply deterministic, policy-grounded reasoning.
+		3. If evidence is insufficient, clearly lower confidence and indicate need for clarification.
+		4. Do not retrieve new data in this task.
+
+		OUTPUT REQUIREMENTS:
+		- reasoning_summary must explain why conclusion follows from evidence.
+		- conclusion must remain strictly policy-aligned.
+		- confidence must be one of: high, medium, low.
+
+	context:
+		- task_orchestrate
+		- task_retrieve_knowledge
+
+	expected_output: >
+		{
+			"reasoning_summary": "concise structured reasoning",
+			"conclusion": "policy-aligned outcome",
+			"confidence": "high | medium | low"
+		}
+
+	agent: reasoning_agent
+
+
+task_memory_sync:
+	description: >
+		Handle conversation memory retrieval or update based on execution_plan from
+		task_orchestrate and current task outputs.
+
+		INPUTS:
+		- session id '${session_id}'
+		- orchestration output from task_orchestrate
+		- reasoning output from task_reason_over_evidence
+
+		RULES:
+		1. If execution_plan includes retrieve_memory, fetch relevant memory payload.
+		2. If execution_plan includes update_memory, persist structured summary and key facts.
+		3. If no memory action is requested, return memory_status=empty.
+		4. Never modify memory without explicit instruction from execution_plan.
+
+	context:
+		- task_orchestrate
+		- task_reason_over_evidence
+
+	expected_output: >
+		{
+			"memory_status": "retrieved | updated | empty",
+			"memory_payload": {}
+		}
+
+	agent: memory_agent
+
+
+task_format_response:
+	description: >
+		Create the final user-facing response using reasoning output and optional
+		memory context.
+
+		INPUTS:
+		- original prompt '${prompt}'
+		- reasoning output from task_reason_over_evidence
+		- memory output from task_memory_sync
+
+		FORMATTING RULES:
+		1. Keep enterprise-professional tone and concise structure.
+		2. Preserve reasoning outcome exactly.
+		3. If confidence is low or intent is clarification_required, ask a precise follow-up question.
+		4. Do not add unsupported claims.
+		5. Do not expose internal execution plan or internal tool details.
+
+	context:
+		- task_orchestrate
+		- task_reason_over_evidence
+		- task_memory_sync
+
+	expected_output: >
+		Clear plain-text response that answers the user query, grounded in retrieved
+		evidence and structured reasoning, with clarification when required.
+
+	agent: response_agent
