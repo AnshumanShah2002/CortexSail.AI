@@ -128,16 +128,30 @@ def confluence_document_fetcher(filters: ConfluenceDocumentFilter, url: str = No
 
             ##Instead of this function we can use the meta_data to fetch the document and then use the document_id to fetch the content of the document and then return the content as part of the response. This way we can avoid fetching the content of all the documents in the search result and only fetch the content of the relevant documents based on the top_k value provided by the user.
 
-            result = confluence.search_documents(cql_query, limit=10, expand = "content.space,content.version")  
+
+            # add fields here one by one as per the requirement and the response from the confluence.cql function
+            results = confluence.cql(cql=cql_query, start=0, limit=10, expand="content.space,content.version")
             # Adjust limit as needed
 
-            ##meta-data method 
+            ##meta-data method for extracting the data
             
-
-
-
-
-
+            confluence_metadata = [
+                {
+                    "source": "confluence",
+                    "document_id": (result.get("content", {}) or {}).get("id") or result.get("id"),
+                    "title": (result.get("content", {}) or {}).get("title") or result.get("title", ""),
+                    "content_type": (result.get("content", {}) or {}).get("type") or result.get("type", "page"),
+                    "space_key": ((result.get("content", {}) or {}).get("space", {}) or {}).get("key"),
+                    "space_name": ((result.get("content", {}) or {}).get("space", {}) or {}).get("name"),
+                    "status": result.get("status") or (result.get("content", {}) or {}).get("status"),
+                    "updated_at": ((result.get("content", {}) or {}).get("version", {}) or {}).get("when"),
+                    "version": ((result.get("content", {}) or {}).get("version", {}) or {}).get("number"),
+                    "created_by": (((result.get("content", {}) or {}).get("version", {}) or {}).get("by", {}) or {}).get("displayName"),
+                    "url": ((result.get("content", {}) or {}).get("_links", {}) or {}).get("webui") or result.get("url"),
+                }
+                for result in results
+            ]
+            return confluence_metadata 
 
         except Exception as e:
             print(f'Failed to connect to Confluence: {e}')
