@@ -17,7 +17,7 @@ An agentic AI platform that retrieves company knowledge, reasons over policies, 
   - Langchain and Langgraph for LLM model integration
 
 - LLM Model
-  - Gemini Flash 2.5 / Azure OpenAI deployed model
+  - Gemini Flash 2.5 / Azure OpenAI deployed model - based on requirement
 
 - Server tools
   - MCP server hosting

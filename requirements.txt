@@ -25,6 +25,9 @@ pydantic
 # YAML Config Loading
 pyyaml
 
+# Data Processing
+pandas
+
 # Optional: Async + HTTP (often required by LLM libs)
 httpx
 

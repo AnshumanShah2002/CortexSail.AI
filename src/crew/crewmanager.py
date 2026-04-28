@@ -36,7 +36,7 @@ class CrewManager:
         try:
             llm = LLM(
                 model = settings.base_model_name,
-                api_version = settings.gemini_model_version,
+                api_version = settings.azure_api_version,
                 temperature = settings.base_model_llm_temperature,
                 max_tokens = settings.model_max_tokens
             )

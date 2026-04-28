@@ -101,7 +101,7 @@ def build_cql(filters: Dict[str, Any], default_space: str | None = None) -> str:
 
     return cql_final
 
-@tools("Confluence Fetcher")
+@tool("Confluence Fetcher")
 def confluence_document_fetcher(filters: ConfluenceDocumentFilter, url: str = None, username: str = None, password: str = None) -> List[Dict]:
     """Example tool to fetch documents from Confluence based on filters created"""
     "We are taking the user input -> validate against pydantic model -> then to typed model -> then convert back to dictionary -> this removes values without any values ie: None or empty then we pass to build_cql"
@@ -133,7 +133,7 @@ def confluence_document_fetcher(filters: ConfluenceDocumentFilter, url: str = No
             results = confluence.cql(cql=cql_query, start=0, limit=10, expand="content.space,content.version")
             # Adjust limit as needed
 
-            ##meta-data method for extracting the data
+            ##meta-data + the CQL ,for fetching from the vector database
             
             confluence_metadata = [
                 {
@@ -156,3 +156,16 @@ def confluence_document_fetcher(filters: ConfluenceDocumentFilter, url: str = No
         except Exception as e:
             print(f'Failed to connect to Confluence: {e}')
             return []
+        
+##Two step narrowing for fetching the appropriate document from confluence based on the user's query
+@tool("Similar Documents Fetcher")
+def similar_documents_fetcher(query:str, no_of_documents: int = 5,space_key: str = None):
+    """
+    Example tool to fetch similar documents from Confluence based on the user's query and the space key provided and on historical data
+    """
+    try:
+        print(f'Fetching similar documents for query: {query} from space: {space_key}')
+
+        ###Initialzing the VectorDB service
+        ###ChromaDB - Post initialize Chroma config in vectorDB layer
+        

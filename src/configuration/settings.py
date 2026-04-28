@@ -1,26 +1,34 @@
 """Base settings configuration for Cortexsail"""
 
-from dataclasses import Field
+from pydantic import Field
 import os
 from dotenv import load_dotenv
+from pydantic import Field
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from pydantic import BaseSettings, Field
+from configuration.settings import Settings
 
 
 
 class Settings(BaseSettings):
 
-    ## Environ variables for usage gemini model
-    gemini_api_key: str = "####"
-    gemini_api_endpoint = "####"
-    gemini_api_version = "###"
-    gemini_model_version = "####"
+    ## Environ variables for usage azure model
+    azure_api_key: str = "####"
+    azure_api_endpoint = "####"
+    azure_api_version = "###"
+    azure_model_version = "####"
+
+    ###Embedding model config###
+    embedding_model_name: str = "###"
+    embedding_deployment_name: str = "####"
+    embedding_api_version: str = "####"
+    embedding_model_dimension: int = 1024 #change as per requirement
+    azure_endpoint: str = "####"
 
     ### Basic configuration ###
-
-    base_model_name: str = "gemini-2.5-flash"
-    base_model_llm_temperature: float = 0.3
+    base_model_name: str = "####"
+    base_model_llm_temperature: float = 0.5
     model_max_tokens = 1000
 
 
@@ -34,7 +42,7 @@ class Settings(BaseSettings):
         description="Endpoint URL for the MCP server"
     )
 
-    mcp_transport = str = Field(
+    mcp_transport: str = Field(
         default="sse",
         description="Transport method for MCP communication (e.g., 'sse', 'websocket')"
     )
@@ -46,17 +54,35 @@ class Settings(BaseSettings):
 
 
     #Redis config
-    redis_host: str = Field(default="localhost")
+    # redis_host: str = Field(default="localhost")
 
+    ### Vector DB config - ChromaDB config
+    vector_db_persist_dir: str = Field(
+        default="./chroma_db",
+        description="Directory path for persisting ChromaDB data"
+    )
 
+    vector_db_collection_name: str = Field(
+        default="Cortexsail_documents",
+        description="ChromaDB collection name for storing the documents and their embeddings"
+    )
+    vector_db_similarity_metric: float = Field(
+        default=0.6,
+        description="Similarity metric for ChromaDB vector comparisons and its baseline value for filtering the relevant documents based on the user's query"
+    )
+
+    class Config:
+        env_file = ".env"
+        case_sensitivity = False
+        
     def boot_settings(self) -> Settings:
         try:
             load_dotenv()
             settings = Settings()
-            os.environ["GEMINI_API_KEY"] = settings.gemini_api_key
-            os.environ["GEMINI_API_ENDPOINT"] = settings.gemini_api_endpoint
-            os.environ["GEMINI_MODEL_VERSION"] = settings.gemini_model_version
-            os.environ["GEMINI_API_VERSION"] = settings.gemini_api_version
+            os.environ["AZURE_API_KEY"] = settings.azure_api_key
+            os.environ["AZURE_API_ENDPOINT"] = settings.azure_api_endpoint
+            os.environ["AZURE_MODEL_VERSION"] = settings.azure_model_version
+            os.environ["AZURE_API_VERSION"] = settings.azure_api_version
 
             #To be toggled when declaring the memory config file for both types
             return settings
