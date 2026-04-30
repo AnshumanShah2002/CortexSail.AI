@@ -44,8 +44,52 @@ class AzureEmbeddingFunction:
     
     """ Function to create the vector embedding for the user query using Azure OpenAI embeddings endpoint """
 
-    # def embed_query(self, input:str) -> List[float]:
+    def embed_query_function(self, input:str) -> List[float]:
+        # Embedding for the user query
+            if isinstance(input, str):
+                embedding = self.__call__([input])
+                result = embedding[0]
+                # print(f""Generated embedding for the query: {result}")
+                return result
+            return self(input)[0]
+    
+    def embed_document_function(self, input: list[str]) -> List[List[float]]:
+        ###embedding generation for documents chunk
+        ### Check if the input is a List of str or a single string
+        if isinstance(input, List[str]):
+            return self([input])
+        return self(input)
+
+class VectorDBService:
+    """Initializes the VectorDBService with ChromaDB client and collection."""
+
+    def __init__(self, persistent_directory: str = "./chroma_db"):
+    
+        """Initializes the ChromaDB client and the collection for storing documents and their embeddings."""
+
+        ##Persistent Directory for chromaDB - storing the vector embeddings and the metadata of the documents
+        self.persistent_directory = persistent_directory
+
+        self.collection_name = "conf_collection"
+
+        ##Client for ChromaDB - For accessing the Persistent Directory
+        self.client = chromadb.PersistentClient(path = persistent_directory)
+
+        ###Creating the embedding
+
+        self.embedding_function = AzureEmbeddingFunction()
+
+
+        ##Get or Create collection function for chromaDB
+
+        ##Correct the metadata object
+        self.collection = self.client.get_or_create_collection(name = self.collection_name, embedding_function = self.embedding_function,
+        metadata={"description": "Collection for storing the document chunks and their vector embeddings for Cortexsail application"})
+
+        print(f"Collection name {self.collection_name} initialized successfully.")
+
+
+    # def upload_csv_content(self, csv_file_path: str):
+    #     """Upload CSV to ChromaDB as vector embeddings to be used for retrieval during the user query and response generation."""
+
     #     try:
-    #         if isinstance(input, str):
-    #             embedding = self.__call__([input])
-    #             result = embedding[0]
