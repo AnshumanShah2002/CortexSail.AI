@@ -89,7 +89,84 @@ class VectorDBService:
         print(f"Collection name {self.collection_name} initialized successfully.")
 
 
-    # def upload_csv_content(self, csv_file_path: str):
-    #     """Upload CSV to ChromaDB as vector embeddings to be used for retrieval during the user query and response generation."""
+    def upload_csv_content(self, csv_file_path: str):
+        """Upload CSV to ChromaDB as vector embeddings to be used for retrieval during the user query and response generation."""
 
-    #     try:
+        try:
+            ##Reading the CSV file using pandas
+            df = pd.read_csv(csv_file_path)
+
+            ##Iterating through the rows of the dataframe and creating the documents and their metadata for uploading to ChromaDB
+
+            ##Filter based on the release status - narrowing the scope of document
+            if "Release Status" in df.columns:
+                df = df[df["Release Status"].isin(["At Risk", "Blocked", "Delayed"])]
+
+            ###Creating documents and metadata for each row in the dataframe to be uploaded to ChromaDB
+
+            documents = []
+            metadata = []
+            ids = []
+
+            for index,row in df.iterrows():
+
+                ##Appending the filtered documents to the list to be uploaded to ChromaDB
+
+                document_builder_row = []
+
+                if pd.notna(row.get("Issue Key")) :
+                    document_builder_row.append(f"Issue Key: {row['Issue Key']}")
+
+                if pd.notna(row.get("Issue Type")):
+                    document_builder_row.append(f"Issue Type: {row['Issue Type']}")
+                if pd.notna(row.get("Summary")):
+                    document_builder_row.append(f"Summary: {row['Summary']}")
+                if pd.notna(row.get("Description")):
+                    document_builder_row.append(f"Description: {row['Description']}")
+                if pd.notna(row.get("Priority")):
+                    document_builder_row.append(f"Priority: {row['Priority']}")
+                if pd.notna(row.get("Release Status")):
+                    document_builder_row.append(f"Release Status: {row['Release Status']}")
+
+                embedding_string_document = "\n".join(document_builder_row)
+
+                if not embedding_string_document.strip():
+                    continue
+                documents.append(embedding_string_document)
+
+                ###Creating the metadata for each document to be uploaded to ChromaDB
+
+                metadatas = {
+                    "Issue Key": str (row.get("Issue Key", "")),
+                    "Issue Type": str (row.get("Issue Type", "")),
+                    "Summary": str (row.get("Summary", "")),
+                    "Description": str (row.get("Description", "")),
+                    "Priority": str (row.get("Priority", "")),
+                    "Release Status": str (row.get("Release Status", ""))
+                }
+                metadata.append(metadatas)
+
+                ##Batching and sending every    documents to ChromaDB for uploading
+
+                batch_size = 100
+                total_documents_added = 0
+
+                for i in range(0, len(documents), batch_size):
+                    batch_document = documents[i:i + batch_size]
+
+                    batch_metadata = metadata[i:i + batch_size]
+
+                    batch_ids = ids[i:i + batch_size]
+
+                    ###Add in Collection - ChromaDB method to add the documents, their metadata and the unique ids to the collection
+                    self.collection.add(
+                        documents = batch_document,
+                        metadatas = batch_metadata,
+                        ids = batch_ids
+                    )
+                    
+                    total_documents_added += len(batch_document)
+                    print(f"Successfully added {total_documents_added} documents to the collection.")
+        except Exception as e:
+            print(f"Error uploading CSV content to ChromaDB")
+            raise

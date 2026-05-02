@@ -1,0 +1,8 @@
+Issue Key,Issue Type,Summary,Description,Priority,Release Status,Assignee,Reporter,Sprint,Fix Version,Due Date
+PROJ-101,Bug,Login page crashes on mobile,Users unable to log in from iOS 16+,High,Blocked,Ana Smith,John Doe,Sprint 5,v2.3.0,2026-05-10
+PROJ-102,Defect,Payment gateway timeout,API times out under high server load,Critical,At Risk,Bob Jones,Jane Smith,Sprint 5,v2.3.0,2026-05-05
+PROJ-103,Bug,Search returns duplicates,Same record shows multiple times with filters,Medium,Delayed,Cara Lee,John Doe,Sprint 4,v2.2.1,2026-04-30
+PROJ-104,Story,Add dark mode,,Low,On Track,Dan Ray,Jane Smith,Sprint 6,v2.4.0,2026-05-20
+PROJ-105,Task,Update API docs,,Low,Done,Eli Brown,John Doe,Sprint 4,v2.2.1,2026-04-15
+PROJ-106,Defect,Session expires too early,Token invalidates after 5 min instead of 30,High,At Risk,Ana Smith,Jane Smith,Sprint 5,v2.3.0,2026-05-08
+PROJ-107,Bug,PDF export missing headers,Header row is blank when exporting reports,Medium,Blocked,Bob Jones,John Doe,Sprint 5,v2.3.0,2026-05-12
