@@ -70,6 +70,7 @@ class VectorDBService:
         ##Persistent Directory for chromaDB - storing the vector embeddings and the metadata of the documents
         self.persistent_directory = persistent_directory
 
+        ###To be used everywhere
         self.collection_name = "conf_collection"
 
         ##Client for ChromaDB - For accessing the Persistent Directory
@@ -217,3 +218,32 @@ class VectorDBService:
             print(f"Error searching similar onboarding documents: {e}")
             return []
     
+    def get_collection_details(self) -> Dict:
+        """Extract the details of collection"""
+
+        try:
+            collection_count = self.collection.count()
+
+            return {
+                "collection_name": self.collection_name,
+                "number_of_documents": collection_count,
+                "persistent_directory": self.persistent_directory
+            }
+        except Exception as e:
+            print(f"Error getting collection details: {e}")
+            return {}
+
+    def clear_complete_collection(self):
+        """Clear the complete collection in ChromaDB - for testing purposes"""
+
+        try:
+            self.client.delete_collection(name = self.collection_name)
+
+            ### Creating a new collection after deleting so that the collection is ready to be used for uploading the documents and their embeddings again
+            self.collection = self.client.create_collection(name = self.collection_name, metadata={
+                "description": "Collection for storing the document chunks and their vector embeddings for Cortexsail application"
+            })
+            print(f"Collection {self.collection_name} cleared successfully and new collection created.")
+        except Exception as e:
+            print(f"Error clearing the collection: {e}")
+            raise
