@@ -7,6 +7,7 @@ from .models import(
     DocumentIngestRequest,
     DocumentIngestResponse,
     ConfluenceDocumentFilter,
+    ConfluenceUserLoginResponse,
 )
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "SourceDocument",
     "RAGResponse",
     "DocumentIngestRequest",
-    "DocuementIngestResponse",
+    "DocumentIngestResponse",
     "ConfluenceDocumentFilter",
+    "ConfluenceUserLoginResponse",
 ]

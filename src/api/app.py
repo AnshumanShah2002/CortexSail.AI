@@ -1,5 +1,6 @@
 """FastAPI config to be called from main.py"""
 
+from crewai.flow import router
 from fastapi import FastAPI
 
 def create_app() -> FastAPI:
@@ -9,6 +10,10 @@ def create_app() -> FastAPI:
         version="1.0.0",
         description="This API serves as the backend for the CortexSail Agentic RAG system, providing endpoints for processing and retrieving information related to the agent's operations."
     )
+
+    ##Including the service layer routers for handling specific functionalities
+    app.include_router(router)
+    return app
 
     @app.get("/health-check")
     def health_check():

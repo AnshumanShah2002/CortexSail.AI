@@ -12,6 +12,7 @@ from crewai_tools import MCPServerAdapter
 
 load_dotenv()
 
+####Check if agent init is correct
 class CrewManager:
     def __init__(self, agent_config_path: str):
         ##current directory parent folder path

@@ -3,7 +3,8 @@
 from typing import Optional
 from pydantic import BaseModel
 
-#Generic modelsdel
+#Generic models for RAG system, these can be extended or modified as needed for specific tools or integrations
+
 
 
 class RAGQueryRequest(BaseModel):
@@ -58,7 +59,6 @@ class DocumentIngestResponse(BaseModel):
 	message: Optional[str] = None
 
     
-    
 ###Confluence specific models for the confluence document fetcher tool
 class ConfluenceDocumentFilter(BaseModel):
 	space: Optional[str] = None
@@ -77,3 +77,8 @@ class ConfluenceDocumentFilter(BaseModel):
 	lastmodified_before: Optional[str] = None
 	order_by: Optional[str] = None
 
+class ConfluenceUserLoginResponse(BaseModel):
+    """Response model for Confluence login"""
+    success: bool
+    session_id: Optional[str] = None
+    message: Optional[str] = None
