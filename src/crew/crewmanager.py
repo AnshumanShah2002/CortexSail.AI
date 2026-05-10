@@ -6,6 +6,7 @@ from crewai import Agent, Crew, Task, LLM
 from langchain_google_genai import ChatGoogleGenerativeAI
 from crewai.memory import ShortTermMemory, LongTermMemory
 from src.configuration.settings import settings
+from typing import Optional
 from typing import Dict, List
 from pathlib import Path
 from crewai_tools import MCPServerAdapter
@@ -14,10 +15,11 @@ load_dotenv()
 
 ####Check if agent init is correct
 class CrewManager:
-    def __init__(self, agent_config_path: str):
+    def __init__(self, agent_config_path: str, session_id: Optional[str] = None):
         ##current directory parent folder path
         self.crew_dir = Path(__file__).parent
         self.agent_config_path = agent_config_path
+        self.session_id = session_id
         self.listed_mcp_tools = self.load_mcp_tools()
         self.llm = self.initialize_llm()
         self.agents = self.boot_agents()
