@@ -156,6 +156,22 @@ class CrewManager:
         except Exception as e:
             print(f'Error loading agent configuration: {e}')
             raise
+    ##Initializing the crew instance with the agents and memory, this will be used to execute the tasks assigned by the service layer
+    def get_crew_instance(self) -> Crew:
+        """Function to intialze the crew instance with the agents and memory, this will be used to execute the tasks assigned by the service layer"""
+
+        try:
+            print(f"Setting up the crew instance for the session with memory{self.session_id}")
+            memory_configuration = {
+                "verbose" : True,
+            }
+            ###Initialize the memory instance
+            if settings.short_term_memory_flag or settings.long_term_memory_flag:
+                memory_configuration["memory"] = True
+
+        except Exception as e:
+            print(f"Error occured while setting up the crew instance: {e}")
+
     def load_mcp_tools(self) -> List:
         """Loading the listed MCP tools from the tools directory"""
         try:

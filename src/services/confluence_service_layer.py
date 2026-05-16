@@ -5,6 +5,7 @@ Service layer for confluence integration in the CortexSail Agentic RAG System
 from src.configuration import settings
 from src.crew.crewmanager import CrewManager
 from typing import Dict, List
+from src.memory.conversation_memory import get_conversation_memory
 
 
 class ConfluenceService:
@@ -40,4 +41,16 @@ class ConfluenceService:
             if self.conversation_memory is None:
                 print(f"Creating conversation memory for the session {session_id}")
 
-                self.conversation_memory = fetch_conversation_memory(session_id)
+                self.conversation_memory = get_conversation_memory(session_id)
+
+            ###Fetching the conversation summary for the session from the conversation memory, this can be used to provide context to the agents for the conversation - latest conversation entry
+
+            last_conversation = self.conversation_memory.get_latest_data_from_latest_query()
+
+            #Fetching filters also
+            converstaion_filter = self.conversation_memory.get_latest_filters()
+
+            print(f"Fetched previous data: {len(last_conversation) if last_conversation else 0}")
+
+            ###Initializing the crew instance
+            crew_instance = self.crew_manager.get_crew_instance()
