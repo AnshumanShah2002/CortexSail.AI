@@ -11,6 +11,8 @@ from typing import Any, Dict, List
 
 from atlassian import Confluence
 
+from src.services.vectordb_service import VectorDBService
+
 def confluence_connection(url: str, username: str, password: str) -> Confluence:
     try:
         confluence = Confluence(url = url, username = username, password = password)
@@ -159,13 +161,59 @@ def confluence_document_fetcher(filters: ConfluenceDocumentFilter, url: str = No
         
 ##Two step narrowing for fetching the appropriate document from confluence based on the user's query
 @tool("Similar Documents Fetcher")
-def similar_documents_fetcher(query:str, no_of_documents: int = 5,space_key: str = None):
+def similar_documents_fetcher(query:str, no_of_documents: int = 5,space_key: str = None) -> str :
     """
     Example tool to fetch similar documents from Confluence based on the user's query and the space key provided and on historical data
     """
     try:
         print(f'Fetching similar documents for query: {query} from space: {space_key}')
 
+        
         ###Initialzing the VectorDB service
         ###ChromaDB - Post initialize Chroma config in vectorDB layer
+        vector_db_instance = VectorDBService(persistent_directory="./chroma_db") 
         
+        filter = {}
+        if space_key:
+            filter["space_key"] = space_key
+        
+        ##Searching for similar documents in the vector database based on the query and the filter provided
+        
+        similar_documents = vector_db_instance.search_similar_onboarding_documents(
+            query=query,
+            filters=filter if filter else None,
+            n_results=no_of_documents
+        )
+
+        if not similar_documents:
+            return "No similar documents found for the query."
+        top_relevant_document = similar_documents[0]
+        metadata = top_relevant_document["metadata"]
+
+        ##Normal formatting of the response for the agent to consume and use as context for the conversation
+        response_part = ["\n" + "="*60]
+        response_part.append("Similar Document Found")
+        response_part.append("="*60+"\n")
+
+        ##Displaying the metadata of the document in the response
+        response_part.append(f"Document ID: {metadata.get('Document ID','N/A')}")
+        response_part.append(f"Title: {metadata.get('Title','N/A')}")
+        response_part.append(f"Role Description: {metadata.get('Role Description','N/A')}")
+        response_part.append(f"Department: {metadata.get('Department','N/A')}")
+        response_part.append(f"Location: {metadata.get('Location','N/A')}")
+        response_part.append(f"Role: {metadata.get('Role','N/A')}")
+        response_part.append(f"Team: {metadata.get('Team','N/A')}")
+
+        ##Assuming the document content is also stored in the vector database along with the metadata, we can fetch the content and include it in the response as well.
+        document = top_relevant_document.get("Document","")
+        ##Check issue in Document
+        if "Role Description" in document:
+            role_description = document.split("Role Description:")[1].strip()
+            response_part.append(f"\nRole Description: {role_description}")
+
+        response_part.append("\n"+"="*60)
+        print(f"Returning the most similar document for the query: {query} with metadata: {metadata}")
+        return "\n".join(response_part)
+    except Exception as e:
+        print(f'Failed to fetch similar documents: {e}')
+        return "An error occurred while fetching similar documents."

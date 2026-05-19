@@ -156,6 +156,18 @@ class CrewManager:
         except Exception as e:
             print(f'Error loading agent configuration: {e}')
             raise
+
+    ##Declaring the boot_tasks()
+    def boot_tasks(self) -> Dict:
+        """Loading the tasks yaml file"""
+        try:
+            task_configuration = self.crew_dir / 'tasks.yaml'
+            with open(task_configuration,'r', encoding='utf-8') as f:   
+                task_configuration = yaml.safe_load(f)
+
+                tasks = {}
+                ##Implement task function from here
+
     ##Initializing the crew instance with the agents and memory, this will be used to execute the tasks assigned by the service layer
     def get_crew_instance(self) -> Crew:
         """Function to intialze the crew instance with the agents and memory, this will be used to execute the tasks assigned by the service layer"""
@@ -168,6 +180,26 @@ class CrewManager:
             ###Initialize the memory instance
             if settings.short_term_memory_flag or settings.long_term_memory_flag:
                 memory_configuration["memory"] = True
+                ##Short-Term Memory instance
+                if settings.short_term_memory_flag:
+                    memory_configuration["short_term_memory"] = ShortTermMemory()
+                    print(f"Short-term memory enabled for the session {self.session_id}")
+                ##Long-Term Memory instance
+                if settings.long_term_memory_flag:
+                    memory_configuration["long_term_memory"] = LongTermMemory()
+                    print(f"Long-term memory enabled for the session {self.session_id}")
+            crew_instance = Crew(
+                agents = [self.agents["orchestation_agent"],
+                self.agents["knowledge_agent"],
+                self.agents["reasoning_agent"],
+                self.agents["memory_agent"],
+                self.agents["response_agent"]],
+
+                tasks = [self.tasks["task_orchestrate"], self.tasks["task_retrieve_knowledge"], self.tasks["task_retrieve_over_evidence"], self.tasks["task_memory_sync"],["task_format_response"],],
+                **memory_configuration
+
+            )
+            
 
         except Exception as e:
             print(f"Error occured while setting up the crew instance: {e}")

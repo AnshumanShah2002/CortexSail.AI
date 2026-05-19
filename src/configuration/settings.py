@@ -33,8 +33,8 @@ class Settings(BaseSettings):
 
 
     ### memory flag ###
-    short_term_memory_flag:bool = False
-    long_term_memory_flag:bool = False
+    short_term_memory_flag:bool = True
+    long_term_memory_flag:bool = True
 
     ###MCP config
     mcp_endpoint: str = Field(

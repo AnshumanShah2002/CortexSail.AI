@@ -37,3 +37,6 @@ pysnow                # ServiceNow connector (optional)
 
 # Crew ai core package
 crewai
+
+#Redis
+redis
