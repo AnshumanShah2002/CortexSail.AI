@@ -30,16 +30,13 @@ task_orchestrate:
 		- Never invent execution steps.
 		- Never return natural language commentary.
 		- Output must be valid JSON only.
-
-	expected_output: >
+expected_output: >
 		{
 			"intent": "policy_lookup | policy_reasoning | contextual_followup | clarification_required",
 			"execution_plan": ["retrieve_documents", "evaluate_policy", "generate_response"],
 			"agents_required": ["knowledge_agent", "reasoning_agent", "response_agent"]
 		}
-
 	agent: orchestrator_agent
-
 
 task_retrieve_knowledge:
 	description: >
@@ -62,11 +59,9 @@ task_retrieve_knowledge:
 		- Never summarize retrieved documents.
 		- Never infer missing policy text.
 		- Never add external knowledge.
-
 	context:
 		- task_orchestrate
-
-	expected_output: >
+expected_output: >
 		{
 			"retrieved_documents": [
 				{
@@ -76,9 +71,7 @@ task_retrieve_knowledge:
 				}
 			]
 		}
-
 	agent: knowledge_agent
-
 
 task_reason_over_evidence:
 	description: >
@@ -95,20 +88,16 @@ task_reason_over_evidence:
 		- reasoning_summary must explain why conclusion follows from evidence.
 		- conclusion must remain strictly policy-aligned.
 		- confidence must be one of: high, medium, low.
-
 	context:
 		- task_orchestrate
 		- task_retrieve_knowledge
-
-	expected_output: >
+expected_output: >
 		{
 			"reasoning_summary": "concise structured reasoning",
 			"conclusion": "policy-aligned outcome",
 			"confidence": "high | medium | low"
 		}
-
 	agent: reasoning_agent
-
 
 task_memory_sync:
 	description: >
@@ -125,19 +114,15 @@ task_memory_sync:
 		2. If execution_plan includes update_memory, persist structured summary and key facts.
 		3. If no memory action is requested, return memory_status=empty.
 		4. Never modify memory without explicit instruction from execution_plan.
-
 	context:
 		- task_orchestrate
 		- task_reason_over_evidence
-
-	expected_output: >
+expected_output: >
 		{
 			"memory_status": "retrieved | updated | empty",
 			"memory_payload": {}
 		}
-
 	agent: memory_agent
-
 
 task_format_response:
 	description: >
@@ -155,14 +140,11 @@ task_format_response:
 		3. If confidence is low or intent is clarification_required, ask a precise follow-up question.
 		4. Do not add unsupported claims.
 		5. Do not expose internal execution plan or internal tool details.
-
 	context:
 		- task_orchestrate
 		- task_reason_over_evidence
 		- task_memory_sync
-
-	expected_output: >
+expected_output: >
 		Clear plain-text response that answers the user query, grounded in retrieved
 		evidence and structured reasoning, with clarification when required.
-
 	agent: response_agent

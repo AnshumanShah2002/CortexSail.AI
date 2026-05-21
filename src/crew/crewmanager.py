@@ -167,6 +167,49 @@ class CrewManager:
 
                 tasks = {}
                 ##Implement task function from here
+                ##Orchestration Task
+                orchestrator_task_configuration = task_configuration["task_orchestrate"]
+                tasks["task_orchestrate"] = Task(
+                    description=orchestrator_task_configuration["description"],
+                    agent=self.agents["orchestation_agent"],
+                    expected_output = orchestrator_task_configuration["expected_output"],
+                    #Check if this is the last output that we want or are we passing this output to any other agent for further processing, if output is final then we can directly return the output to the user from the service layer, if not, then we can pass the output to the next agent for further processing until we get the final output that we want to return to the user
+                    # output_json=self.agents['orchestrator_agent']
+                )
+
+                #Retrieve knowledge task
+                retrieve_knowledge_task_configuration = task_configuration["task_retrieve_knowledge"]
+                tasks["task_retrieve_knowledge"] = Task(
+                    description=retrieve_knowledge_task_configuration["description"],
+                    agent=self.agents["knowledge_agent"],
+                    expected_output=retrieve_knowledge_task_configuration["expected_output"],
+                )
+
+                #Reason over evidence task
+                reasoning_task_configuration = task_configuration["task_reasoning_over_evidence"] = Task(
+                    description=reasoning_task_configuration["description"],
+                    agent=self.agents["reasoning_agent"],
+                    expected_output=reasoning_task_configuration["expected_output"],
+                )
+
+                #Memory sync task
+                memory_sync_task_configuration = task_configuration["task_memory_sync"] = Task(
+                    description=memory_sync_task_configuration["description"],
+                    agent=self.agents["memory_agent"],
+                    expected_output=memory_sync_task_configuration["expected_output"],
+                )
+
+                #Response formatting task
+                response_formatting_task_configuration = task_configuration["task_format_response"] = Task(
+                    description=response_formatting_task_configuration["description"],
+                    agent=self.agents["response_agent"],
+                    expected_output=response_formatting_task_configuration["expected_output"],
+                )
+                print("Tasks successfully loaded and initialized.")
+                return tasks    
+        except Exception as e:
+            print(f'Error loading task configuration: {e}')
+            raise
 
     ##Initializing the crew instance with the agents and memory, this will be used to execute the tasks assigned by the service layer
     def get_crew_instance(self) -> Crew:
@@ -197,10 +240,7 @@ class CrewManager:
 
                 tasks = [self.tasks["task_orchestrate"], self.tasks["task_retrieve_knowledge"], self.tasks["task_retrieve_over_evidence"], self.tasks["task_memory_sync"],["task_format_response"],],
                 **memory_configuration
-
             )
-            
-
         except Exception as e:
             print(f"Error occured while setting up the crew instance: {e}")
 
