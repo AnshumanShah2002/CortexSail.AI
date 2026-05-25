@@ -48,9 +48,61 @@ class ConfluenceService:
             last_conversation = self.conversation_memory.get_latest_data_from_latest_query()
 
             #Fetching filters also
-            converstaion_filter = self.conversation_memory.get_latest_filters()
+            conversation_filter = self.conversation_memory.get_latest_filters()
 
             print(f"Fetched previous data: {len(last_conversation) if last_conversation else 0}")
 
             ###Initializing the crew instance
             crew_instance = self.crew_manager.get_crew_instance()
+
+            ##Collecting the context and routing to crew instance , LLM will determine the next steps and the tools to use based on the query, conversation history and filters 
+
+            crew_inputs_llm = {
+                "prompt": query,
+                "previous_conversation":
+                last_conversation if last_conversation else [],
+                "previous_filters": conversation_filter if conversation_filter else {}
+            }
+
+            result = crew_instance.kickoff(input = crew_inputs_llm)
+
+            ##Extracting the response
+            if hasattr(result, "raw"):
+                output_text = result.raw
+            elif isinstance(result, dict) and "raw" in result:
+                output_text = result["raw"]
+            else:
+                output_text = str(result)
+
+            ##If no data is returned, 
+            no_data_response = [
+                "No relevant documents found",
+                "No relevant information found",
+                "No relevant data found",
+                "No relevant results found",
+                "No relevant content found",
+                "No data found",
+                "No information found",
+                "No results found",
+                "No content found",
+                "could not find any relevant information",
+                "could not find any relevant documents",
+                "could not find any relevant data",
+            ]
+
+            if output_text.strip() == "" or any(phrase in output_text.lower() for phrase in no_data_response):
+                return {
+                    "success": False,
+                    "output": "",
+                    "message": "No relevant documents found matching your criteria"
+                }
+            print(f"Document retrieval successful, returning response to user")
+
+            ##Storing this reponse in the conversation memory for the session, this can be used to provide context to the agents for the conversation
+            try:
+                result_data = {
+                    "intent": getattr(result, "intent","analysis"),
+                    "filters": crew_inputs_llm.get("previous_filters",{}),
+                    "confluence_document": getattr(result, "confluence_document", []),
+                    "output_format": getattr(result, "output_format", {"text": output_text}),
+                }   
