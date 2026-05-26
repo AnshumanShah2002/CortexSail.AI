@@ -6,7 +6,7 @@ from src.configuration import settings
 from src.crew.crewmanager import CrewManager
 from typing import Dict, List
 from src.memory.conversation_memory import get_conversation_memory
-
+from docx import Document
 
 class ConfluenceService:
 
@@ -106,3 +106,62 @@ class ConfluenceService:
                     "confluence_document": getattr(result, "confluence_document", []),
                     "output_format": getattr(result, "output_format", {"text": output_text}),
                 }   
+                ##Fallback mechanism
+                ##task_output extraction from result, fallback if the result does not contain these fields then we use the crew generated task_output list - from kickoff
+
+                if hasattr(result, "tasks_output") and result.tasks_output:
+                    for task_output in result.tasks_output:
+                        ##Parsing JSON from task output
+                        import json
+                        try:
+                            parsed_data = json.loads(task_output.raw)
+                            if "intent" in parsed_data:
+                                result_data["intent"] = parsed_data["intent"]
+                            if "filters" in parsed_data:
+                                result_data["filters"] = parsed_data["filters"]
+                            if "confluence_document" in parsed_data:
+                                result_data["confluence_document"] = parsed_data["confluence_document"]
+                            if "output_format" in parsed_data:
+                                result_data["output_format"] = parsed_data["output_format"]
+                        except:
+                            pass
+                self.conversation_memory.add_to_conversation_history(query,result_data)
+                print(f"Stored the response in the conversation memory for the session")
+            except Exception as memory_err:
+                print(f"Unable to store the response in the conversation memory: {memory_err}")
+
+            ##Return object
+            return {
+                "success": True,
+                "output": output_text,
+                "message": "Memory process completed successfully"
+            }
+        except Exception as e:
+            print(f"Error occured during the process: {e}")
+            return {
+                "success": False,
+                "output": "",
+                "message": f"An error occurred: {str(e)}"
+            }
+    
+    ###Function definintion for generating the word document from the markdown 
+    def produce_word_document_from_markdown(self, markdown_content: str, session_id: str) -> Dict:
+        """Generate a word document from markdown content and return the word file or the path URL
+        
+        Args:
+            markdown_content (str): The markdown content to be converted to a word document
+            session_id (str): The session ID for which the document is being generated, this can be used for storing the document in a session specific location or for associating the document with the session in the memory
+
+        Returns:
+            Dict: A dictionary containing the success status, the output (word document or URL), and a message
+        """
+
+        try:
+            #Create a document
+            doc = Document()  
+            
+            ##Title
+            title = doc.add_heading("Confluence Document Analysis",0)
+            title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+            

@@ -40,3 +40,6 @@ crewai
 
 #Redis
 redis
+
+#Document processing
+python-docx
