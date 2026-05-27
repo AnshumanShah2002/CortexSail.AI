@@ -7,6 +7,9 @@ from src.crew.crewmanager import CrewManager
 from typing import Dict, List
 from src.memory.conversation_memory import get_conversation_memory
 from docx import Document
+from datetime import datetime
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.table import WD_ALIGN_VERTICAL
 
 class ConfluenceService:
 
@@ -164,4 +167,53 @@ class ConfluenceService:
             title = doc.add_heading("Confluence Document Analysis",0)
             title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
+            ##Timestamp
+            timestamp = doc.add_paragraph(
+                f"Generated at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"
+            )
+
+            timestamp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+            ##Content Splitting for processing
+            lines = markdown_content.split("\n")
+
+            i=0;
+            while i < len(lines):
+                line = lines[i].strip()
+
+                if not line:
+                    i+=1
+                    continue
+                
+                ##To replace the #'s with the appropriate heading levels by replacing it
+                elif line.startswith("###"):
+                    doc.add_heading(line.replace("###","").strip(), level=1)
+                elif line.startswith("####"):
+                    doc.add_heading(line.replace("####","").strip(), level=2)
+                elif line.startswith("#####"):
+                    doc.add_heading(line.replace("#####","").strip(), level=3)
+                
+                ###Handling tables
+                elif line.startswith("|"):
+                    table_lines = []
+                    while i<len(lines) and lines[i].strip().startswith("|"):
+                        table_lines.append(lines[i].strip())
+                        i+=1
+                ##Skipping the header separator line in markdown tables
+
+                ## Remove the separator row that is present in markdown tables by default after the header row
+                if table_lines and len(table_lines)>1 and '---' in table_lines[1]:
+                    table_lines.pop(1)
+                
+                #Creating table
+                if table_lines:
+                    self.create_table_markdown_lines(doc, table_lines)
+                continue
+
+                ##Handling bullet points
+            elif line.startswith("- ") 
             
+
+
+    ##Used inside the produce_word_document_from_markdown
+    def create_table_markdown_lines(self, doc, table_lines):
