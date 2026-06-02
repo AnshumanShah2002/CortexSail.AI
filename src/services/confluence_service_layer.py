@@ -210,10 +210,86 @@ class ConfluenceService:
                     self.create_table_markdown_lines(doc, table_lines)
                 continue
 
-                ##Handling bullet points
-            elif line.startswith("- ") 
+            ##Handling bullet points
+            elif line.startswith("- "):
+                bullet_point = line.replace("- ","",1)
+                ##Handling bold text and storing in the bullet point
+                bullet_point = self._sanitize_bold_markdown(bullet_point)
+                para = doc.add_paragraph(bullet_point, style='List Bullet')
             
+            ##Handling the horizontal lines in the markdown and adding a horizontal line in the word document and centering it
+            elif line.startswith("---"):
+                doc.add_paragraph('_' * 50).alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+            ##blockquotes in markdown
+            elif line.startswith("> "):
+                blockquote_text = line.replace(">  ", "", 1)
+                para = doc.add_paragraph(blockquote_text)
+                para.italic = True
+
+            
+
+            
+
 
 
     ##Used inside the produce_word_document_from_markdown
     def create_table_markdown_lines(self, doc, table_lines):
+        """Word document generator for adding tables from markdown lines
+
+        Args:
+            doc (Document): The word document object to which the table will be added
+            table_lines (List[str]): The lines of markdown content that represent the table, these lines will be parsed to create the table in the word document
+            
+        Returns:
+            None: This function modifies the word document object in place and does not return anything
+        """
+        rows = []
+        if not table_lines:
+            return
+        ##Parsing the table data lines
+        for line in table_lines:
+            ##Here removing the first and last character which are | in markdown tables and then splitting the line by | to get the individual cells also replacing the space after the split and removing the 1th index and the -1th index
+            cells_list = [cell.strip() for cell in line.split('|')[1:-1]]
+            if cells_list:
+                rows.append(cells_list)
+
+            if not rows:
+                return
+            ##Creating the table with the rows[]
+            ##Choosing the number of elements of any rows to get the count of the columns
+            #fixed rows and cols
+            table = doc.add_table(rows=len(rows), cols=len(rows[0]))
+            table.style = 'Table Grid'
+
+            ##Filling the data - update the n^2 complexity here and optimize it
+
+            #Enumerate gives the index and the entire first row here 1st iteration 
+            for row_index, row_data in enumerate(rows):
+                for col_index, cell_data in enumerate(row_data):
+                    cell = table.cell(row_index, col_index)
+                    cell.text = self._clean_text(cell_data)
+
+                    #Just header row needs to be bold
+                    ###cell -> paragraph -> run -> (Text that requires formatting like bold, italic)
+                    if row_index == 0:
+                        for paragraph in cell.paragraphs:
+                            for run in paragraph.runs:
+                                run.bold = True
+
+                    ##vertical alignment for the cells 
+                    cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                    for paragraph in cell.paragraphs:
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    ##bold markdown fix
+    def _clean_text(self, text):
+        """Helper function to clean the text by removing the bold markers ** """
+        text = text.replace("**","")
+        return text
+    ##Helper function for bold text
+    def _sanitize_bold_markdown(self, text):
+        """Helper function to sanitize the bold markdown in the text by removing the ** markers and returning the cleaned text
+        """
+        return text.replace("**","")
+
