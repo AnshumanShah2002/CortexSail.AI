@@ -2,6 +2,8 @@
 Service layer for confluence integration in the CortexSail Agentic RAG System
 """
 
+import os
+
 from src.configuration import settings
 from src.crew.crewmanager import CrewManager
 from typing import Dict, List
@@ -199,40 +201,72 @@ class ConfluenceService:
                     while i<len(lines) and lines[i].strip().startswith("|"):
                         table_lines.append(lines[i].strip())
                         i+=1
-                ##Skipping the header separator line in markdown tables
+                    ##Skipping the header separator line in markdown tables
 
-                ## Remove the separator row that is present in markdown tables by default after the header row
-                if table_lines and len(table_lines)>1 and '---' in table_lines[1]:
-                    table_lines.pop(1)
+                    ## Remove the separator row that is present in markdown tables by default after the header row
+                    if table_lines and len(table_lines)>1 and '---' in table_lines[1]:
+                        table_lines.pop(1)
+                    
+                    #Creating table
+                    if table_lines:
+                        self.create_table_markdown_lines(doc, table_lines)
+                    continue
+
+                ##Handling bullet points
+                elif line.startswith("- "):
+                    bullet_point = line.replace("- ","",1)
+                    ##Handling bold text and storing in the bullet point
+                    bullet_point = self._sanitize_bold_markdown(bullet_point)
+                    para = doc.add_paragraph(bullet_point, style='List Bullet')
                 
-                #Creating table
-                if table_lines:
-                    self.create_table_markdown_lines(doc, table_lines)
-                continue
+                ##Handling the horizontal lines in the markdown and adding a horizontal line in the word document and centering it
+                elif line.startswith("---"):
+                    doc.add_paragraph('_' * 50).alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-            ##Handling bullet points
-            elif line.startswith("- "):
-                bullet_point = line.replace("- ","",1)
-                ##Handling bold text and storing in the bullet point
-                bullet_point = self._sanitize_bold_markdown(bullet_point)
-                para = doc.add_paragraph(bullet_point, style='List Bullet')
+                ##blockquotes in markdown
+                elif line.startswith("> "):
+                    blockquote_text = line.replace(">  ", "", 1)
+                    para = doc.add_paragraph(blockquote_text)
+                    para.italic = True
+
+                ##handling the regular paragraphs that are present
+                else:
+                    if line:
+                        processed_text = self._sanitize_bold_markdown(line)
+                        doc.add_paragraph(processed_text)
+                i+=1
+
+            ##Require the output directory for the same
+            output_path_directory = "output"
+            os.makedirs(output_path_directory, exist_ok=True)
+
+            ##Function to generate the name of the file with the timestamp and the session id for uniqueness
+            timestamp_text = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"confluence_document_{session_id}_{timestamp_text}.docx"
+
+            #output_path_directory\filename creation
+            filepath = os.path.join(output_path_directory, filename)
+
+            ##Saving the document
+            doc.save(filepath)
+
+            print(f"Document generated successfully at {filepath}")
+
+            return {
+                "success": True,
+                "output": filepath,
+                "filename": filename,
+                "message": "Word document processed and generated successfully"
+            }
+        except Exception as e:
+            print(f"Error occured while generating the word document: {e}")
+            return{
+                "success": False,
+                "filepath": "",
+                "filename": "",
+                "message": f"An error occurred while generating the document: {str(e)}"
+            }
             
-            ##Handling the horizontal lines in the markdown and adding a horizontal line in the word document and centering it
-            elif line.startswith("---"):
-                doc.add_paragraph('_' * 50).alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-            ##blockquotes in markdown
-            elif line.startswith("> "):
-                blockquote_text = line.replace(">  ", "", 1)
-                para = doc.add_paragraph(blockquote_text)
-                para.italic = True
-
-            
-
-            
-
-
-
     ##Used inside the produce_word_document_from_markdown
     def create_table_markdown_lines(self, doc, table_lines):
         """Word document generator for adding tables from markdown lines
