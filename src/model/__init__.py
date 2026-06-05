@@ -8,6 +8,9 @@ from .models import(
     DocumentIngestResponse,
     ConfluenceDocumentFilter,
     ConfluenceUserLoginResponse,
+    ConfluenceDocumentAnalysisModel,
+    ConfluenceDocumentAnalysisResultModel,
+    RequestModelConfluenceAnalyzeDocumentTask
 )
 
 __all__ = [
@@ -19,4 +22,7 @@ __all__ = [
     "DocumentIngestResponse",
     "ConfluenceDocumentFilter",
     "ConfluenceUserLoginResponse",
+    "ConfluenceDocumentAnalysisModel",
+    "ConfluenceDocumentAnalysisResultModel",
+    "RequestModelConfluenceAnalyzeDocumentTask"
 ]
