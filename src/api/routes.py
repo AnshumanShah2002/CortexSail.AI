@@ -4,8 +4,9 @@ API / Controller layer for CortexSail Agentic RAG system. This module defines th
 
 from fastapi import APIRouter, HTTPException, Response, Request, Cookie
 from typing import Optional
-from src.model.models import RAGQueryRequest, RAGResponse, DocumentIngestRequest, DocumentIngestResponse, RAGFilters, RequestModelConfluenceAnalyzeDocumentTask, SourceDocument, ConfluenceDocumentFilter, ConfluenceDocumentAnalysisModel,ConfluenceDocumentAnalysisResultModel
-RequestModelConfluenceAnalyzeDocumentTask
+from src.model.models import HealthCheckResponseModel, RAGQueryRequest, RAGResponse, DocumentIngestRequest, DocumentIngestResponse, RAGFilters, RequestModelConfluenceAnalyzeDocumentTask, SourceDocument, ConfluenceDocumentFilter, ConfluenceDocumentAnalysisModel,ConfluenceDocumentAnalysisResultModel
+RequestModelConfluenceAnalyzeDocumentTask,
+HealthCheckResponseModel
 
 ###Write the service layer first before using it with API layer, this is to ensure separation of concerns and maintain a clean architecture. The service layer will handle the business logic and interactions with external systems, while the API layer will focus on handling HTTP requests and responses.
 from src.services.confluence_service_layer import ConfluenceService
@@ -50,3 +51,14 @@ async def analyze_Confluence_document_task(
         return ConfluenceDocumentAnalysisModel(response_answer = confluence_analysis_result)
     except Exception as e:
         raise HTTPException(status_code = 500, detail=f"An error occurred while processing the request: {str(e)}")
+@router.get("/healthcheck", response_model = HealthCheckResponseModel)
+async def healthcheck():
+    """
+    API endpoint for health check of the service
+    """
+    result = confluence_service_instance.health_check()
+
+    return HealthCheckResponseModel(
+        status = result["status"],
+        message = result["message"]
+    )

@@ -13,6 +13,13 @@ from configuration.settings import Settings
 
 class Settings(BaseSettings):
 
+    ##Declaring the variables for testing the healthcheck endpoint in the confluence_service
+    ##Comment if not testing 
+    # confluence_username: str = "####"
+    # confluence_password: str = "####"
+    # confluence_base_url: str = "####"
+    # epic_key: str = "####"
+
     ## Environ variables for usage azure model
     azure_api_key: str = "####"
     azure_api_endpoint = "####"

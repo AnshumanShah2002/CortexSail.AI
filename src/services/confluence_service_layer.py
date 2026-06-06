@@ -326,4 +326,29 @@ class ConfluenceService:
         """Helper function to sanitize the bold markdown in the text by removing the ** markers and returning the cleaned text
         """
         return text.replace("**","")
+    ### Health check endpoint
+    def health_check(self) -> Dict:
+        """
+        Health check function to check the status of the endpoint
 
+        Returns: Dictionary with the health status and the message
+        """
+        try:
+            from src.Tools.rag_tools import confluence_connection
+
+            ###Testing the confluence connection by passing the credentials
+            test_confluence_connection = confluence_connection(
+                settings.confluence_username,
+                settings.confluence_password,
+                settings.confluence_base_url
+            )
+            return {
+                "status": "healthy",
+                "message": "Confluence service is healthy and able to connect to Confluence API successfully"
+            }
+        except Exception as e:
+            print(f"Health check failed: {e}")
+            return{
+                "status": "unhealthy: api error",
+                "message": f"An error occured during health check: {str(e)}"
+            }

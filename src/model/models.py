@@ -6,19 +6,26 @@ from pydantic import BaseModel
 #Generic models for RAG system, these can be extended or modified as needed for specific tools or integrations
 
 ##Model for /analyze endpoint for prompt and get the response
-
-class ConfluenceDocumentAnalysisModel(BaseModel):
-	response_answer: ConfluenceDocumentAnalysisResultModel
-
+##declare first approach
 class ConfluenceDocumentAnalysisResultModel(BaseModel):
 	"""Result response model for the /analyze endpoint for confluence document analysis tool"""
 	success: bool
 	output: str
 	message: Optional[str] = None
+
+class ConfluenceDocumentAnalysisModel(BaseModel):
+	response_answer: ConfluenceDocumentAnalysisResultModel
 	
 class RequestModelConfluenceAnalyzeDocumentTask(BaseModel):
 	"""Request model for the /analyze endpoint for confluence document analysis tool"""
 	query: str
+
+class HealthCheckResponseModel(BaseModel):
+	"""Response model for the health check endpoint"""
+	status: str
+	message: str
+
+#--------------------------------------------------
 
 class RAGQueryRequest(BaseModel):
 	query: str
