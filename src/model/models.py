@@ -25,6 +25,12 @@ class HealthCheckResponseModel(BaseModel):
 	status: str
 	message: str
 
+class ConfluenceUserLoginCredentialsModel(BaseModel):
+	"""Model for Confluence user login credentials"""
+	confluence_username: str
+	confluence_password: str
+	confluence_url: str
+
 #--------------------------------------------------
 
 class RAGQueryRequest(BaseModel):
