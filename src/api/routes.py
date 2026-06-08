@@ -9,6 +9,7 @@ RequestModelConfluenceAnalyzeDocumentTask,
 HealthCheckResponseModel
 
 ###Write the service layer first before using it with API layer, this is to ensure separation of concerns and maintain a clean architecture. The service layer will handle the business logic and interactions with external systems, while the API layer will focus on handling HTTP requests and responses.
+from src.redis.redis_session_manager import ConfluenceSessionManager
 from src.services.confluence_service_layer import ConfluenceService
 from src.services import vectordb_service
 
@@ -100,4 +101,4 @@ async def get_user_session_data(session_id: str = Cookie(None)):
     """
     Redis session implementation required for this endpoint to work, this is to verify that the session management is working correctly and the user is able to maintain a session across requests.
     """
-    session_manager = 
+    session_manager = ConfluenceSessionManager()
