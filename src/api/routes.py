@@ -1,12 +1,14 @@
 """
 API / Controller layer for CortexSail Agentic RAG system. This module defines the FastAPI application and includes routers for handling API endpoints related to the agent's operations. It serves as the entry point for the API, configuring the app and providing a health check endpoint.
 """
+###we use methods defined in the redis_session_manager adn perform actions by passing the required parameters to perform actions on redis related methods
 
 from fastapi import APIRouter, HTTPException, Response, Request, Cookie
 from typing import Optional
-from src.model.models import ConfluenceUserLoginCredentialsModel, HealthCheckResponseModel, RAGQueryRequest, RAGResponse, DocumentIngestRequest, DocumentIngestResponse, RAGFilters, RequestModelConfluenceAnalyzeDocumentTask, SourceDocument, ConfluenceDocumentFilter, ConfluenceDocumentAnalysisModel,ConfluenceDocumentAnalysisResultModel
+from src.model.models import ConfluenceUserLoginCredentialsModel, HealthCheckResponseModel, RAGQueryRequest, RAGResponse, DocumentIngestRequest, DocumentIngestResponse, RAGFilters, RequestModelConfluenceAnalyzeDocumentTask, SourceDocument, ConfluenceDocumentFilter, ConfluenceDocumentAnalysisModel,ConfluenceDocumentAnalysisResultModel, WordDocumentGenerationRequestModel
 RequestModelConfluenceAnalyzeDocumentTask,
-HealthCheckResponseModel
+HealthCheckResponseModel,
+ConfluenceUserLoginCredentialsModel,
 
 ###Write the service layer first before using it with API layer, this is to ensure separation of concerns and maintain a clean architecture. The service layer will handle the business logic and interactions with external systems, while the API layer will focus on handling HTTP requests and responses.
 from src.redis.redis_session_manager import ConfluenceSessionManager
@@ -101,4 +103,45 @@ async def get_user_session_data(session_id: str = Cookie(None)):
     """
     Redis session implementation required for this endpoint to work, this is to verify that the session management is working correctly and the user is able to maintain a session across requests.
     """
+    ##Instance for the session manager
     session_manager = ConfluenceSessionManager()
+    ##Extracting the session data
+    redis_session_data = session_manager.get_session_data(session_id)
+
+    if not redis_session_data:
+        raise HTTPException(status_code = 404, detail = "Session data not found for the given session_id, please login to create a session and try again.")
+    else:
+        redis_session_data["confluence_password"] = "********"
+    return redis_session_data
+
+##Adding logout route to clear the session data and expire the session in Redis
+@router.post("/logout", response_model = dict)
+async def confluence_logout(response: Response, session_id: str = Cookie(None)):
+    session_manager = ConfluenceSessionManager()
+    if session_id:
+        session_manager.clear_session(session_id)
+    return {
+        "message": "Logged out successfully, session cleared."
+    }
+##Route to generate the word document
+##UI(markdown+call this endpt -> request payload(has markdown content)) - > API -> service layer (generate word document from markdown content) -> API (return the generated word document or a link to download the document)
+@router.post("/generate-word-document")
+async def generate_word_document_definition(request: WordDocumentGenerationRequestModel, session_id: str = Cookie(None)):
+    """Generating word document from markdown content"""
+    try:
+        if not session_id:
+            raise HTTPException(status_code = 401, detail = "Invalid session, please login to create a session and try again.")
+        result = await confluence_service_instance.produce_word_document_from_markdown(markdown_content=request.generated_content, session_id=session_id)
+
+        if result["success"]:
+            return {
+                "success": True,
+                "filename": result["filename"],
+                "message": result["message"]
+            }
+        else:
+            raise HTTPException(status_code = 500, detail = f"Failed to generate word document")
+    except Exception as e:
+        print(f"Error in /generate-word-document endpoint: {str(e)}")
+        raise HTTPException(status_code = 500, detail = f"An error occurred while processing the request: {str(e)}")
+

@@ -95,7 +95,7 @@ class ConfluenceSessionManager:
         Append the chat history to the existing session"""
         try:
             key = f"confluence_session:{session_id}:history"
-
+            ## json_dumps() - convert a Python object into a JSON string
             entry = json.dumps({"role": role, "manage":manage, "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()})
 
             ##pushing in the redis list - rpush as we need proper sequence of history
@@ -104,4 +104,27 @@ class ConfluenceSessionManager:
             print(f"Added history to session {session_id} : {entry}")
         except Exception as e:
             print(f"Error adding history to session: {str(e)}")
+            raise
+    def get_session_history(self, session_id, limit = 10):
+        """
+        Retrieve the chat history for the given session_id, with an optional limit on the number of history entries to retrieve (default is 10).
+        """
+        try:
+            key = f"jira_session:{session_id}:history"
+            raw = self.redis.lrange(key, -limit, -1)
+            #json.loads() - parse a JSON string and convert it into a Python object
+            #picking each item from the raw list and converting it from JSON string to Python dictionary
+            return [json.loads(item) for item in raw]
+        except Exception as e:
+            print(f"Error retrieving session history: {str(e)}")
+            return []
+    def clear_session(self, session_id):
+        """
+        Clear the session data and history for the given session_id, this can be used for logging out the user or clearing the session after some time.
+        """
+        try:
+            self.redis.delete(f"confluence_session:{session_id}")
+            self.redis.delete(f"confluence_session:{session_id}:history")
+        except Exception as e:
+            print(f"Error clearing session: {str(e)}")
             raise

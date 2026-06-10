@@ -30,6 +30,11 @@ class ConfluenceUserLoginCredentialsModel(BaseModel):
 	confluence_username: str
 	confluence_password: str
 	confluence_url: str
+class WordDocumentGenerationRequestModel(BaseModel):
+	"""
+	Request model for the /generate-word-document endpoint
+	"""
+	generated_content: str
 
 #--------------------------------------------------
 

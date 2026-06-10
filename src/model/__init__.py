@@ -12,7 +12,8 @@ from .models import(
     ConfluenceDocumentAnalysisResultModel,
     RequestModelConfluenceAnalyzeDocumentTask,
     HealthCheckResponseModel,
-    ConfluenceUserLoginCredentialsModel
+    ConfluenceUserLoginCredentialsModel,
+    WordDocumentGenerationRequestModel
 )
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     "RequestModelConfluenceAnalyzeDocumentTask",
     "HealthCheckResponseModel",
     "ConfluenceUserLoginCredentialsModel"
+    "GenerateWordDocumentRequestModel"
 ]
