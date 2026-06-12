@@ -3,8 +3,13 @@ API / Controller layer for CortexSail Agentic RAG system. This module defines th
 """
 ###we use methods defined in the redis_session_manager adn perform actions by passing the required parameters to perform actions on redis related methods
 
+import os
+
 from fastapi import APIRouter, HTTPException, Response, Request, Cookie
 from typing import Optional
+from pathlib import Path
+
+from fastapi.responses import FileResponse
 from src.model.models import ConfluenceUserLoginCredentialsModel, HealthCheckResponseModel, RAGQueryRequest, RAGResponse, DocumentIngestRequest, DocumentIngestResponse, RAGFilters, RequestModelConfluenceAnalyzeDocumentTask, SourceDocument, ConfluenceDocumentFilter, ConfluenceDocumentAnalysisModel,ConfluenceDocumentAnalysisResultModel, WordDocumentGenerationRequestModel
 RequestModelConfluenceAnalyzeDocumentTask,
 HealthCheckResponseModel,
@@ -13,7 +18,7 @@ ConfluenceUserLoginCredentialsModel,
 ###Write the service layer first before using it with API layer, this is to ensure separation of concerns and maintain a clean architecture. The service layer will handle the business logic and interactions with external systems, while the API layer will focus on handling HTTP requests and responses.
 from src.redis.redis_session_manager import ConfluenceSessionManager
 from src.services.confluence_service_layer import ConfluenceService
-from src.services import vectordb_service
+from src.services.vectordb_service import VectorDBService
 
 #Defining the router instance for the API endpoints related to the agent's operations, this will be included in the main FastAPI app in app.py
 router = APIRouter()
@@ -145,3 +150,109 @@ async def generate_word_document_definition(request: WordDocumentGenerationReque
         print(f"Error in /generate-word-document endpoint: {str(e)}")
         raise HTTPException(status_code = 500, detail = f"An error occurred while processing the request: {str(e)}")
 
+@router.get("/download-word-document/{filename}")
+async def download_word_document(filename: str, session_id: str = Cookie(None)):
+    """
+    Endpoint to download the generated word document.
+    """
+    try:
+        if not session_id:
+            raise HTTPException(status_code = 401, detail = "Invalid session, please login to create a session and try again.")
+        filepath = os.path.join("output",filename)
+
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code = 404, detail = "File not found on the server.")
+        ##HTTP response but with the actual file, file as response, this is to enable the user to download the file directly when they hit this endpoint with the correct filename, the file will be served as a response with the appropriate headers for downloading the file.
+        return FileResponse(
+            path = filepath,
+            filename = filename,
+            media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+    except Exception as e:
+        print(f"Error in /download-word-document endpoint: {str(e)}")
+        raise HTTPException(status_code = 500, detail = f"An error occurred while processing the request: {str(e)}")
+
+@router.post("/load-vector-database")
+async def load_vector_database(csv_path: Optional[str] = None):
+    """
+    Endpoint to load the vector database with the data from the provided CSV file. 
+
+    Args:
+        csv_filepath - Path of CSV file, If not present then we take the latest CSV from input folder
+
+    Returns:
+        Success message with the number of loaded records or an error message in case of failure.
+    """
+    try:
+        print("Loading vector database with CSV file data...")
+
+        vector_db = VectorDBService(persistent_directory="./chroma_db")
+
+        if csv_path is None:
+            input_dir = Path("./inputs")
+            csv_files = list(input_dir.glob("*.csv"))
+
+            if not csv_files:
+              raise HTTPException(status_code = 404, detail = "No CSV files found in the input directory.")  
+            
+            ##Logic for checking the latest modified file in the input directory and using that file for loading the vector database
+            #csv_path - stores the path to that file
+            csv_path = str(max(csv_files, key = lambda p:p.stat().st_mtime))
+            print(f"Using the CSV file {csv_path}")
+
+            if not Path(csv_path).exists():
+                raise HTTPException(status_code = 404, detail = f"CSV file not found at the specified path: {csv_path}")
+            else:
+                loaded_records = vector_db.upload_csv_content(csv_path)
+
+                ##ChromaDB function defined in service layer- get_collection_stats() to get the number of records in the collection after loading the data from the CSV file.
+
+                collection_stats = vector_db.get_collection_details()
+                
+                ##returning dict for frontend
+
+                return {
+                    "success": True,
+                    "message": f"Vector database loaded successfully with data from {csv_path}",
+                    "loaded_records": loaded_records,
+                    "number_of_documents": collection_stats.get("number_of_documents",0),
+                    "collection_name": collection_stats.get("collection_name",""),
+                    "csv_file": csv_path
+                }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in /load-vector-database endpoint: {str(e)}")
+        raise HTTPException(status_code = 500, detail = f"An error occurred while processing the request: {str(e)}")
+    
+@router.get("/vector-database-stats")
+async def vector_database_stats():
+    """
+    Endpoint to get the statistics of the vector database collection, this includes the number of documents in the collection and the collection name.
+    """
+    try:
+        vector_db = VectorDBService(persistent_directory="./chroma_db")
+        
+        collection_stats = vector_db.get_collection_details()
+
+        return {
+            "success": True,
+            "stats": collection_stats
+        }
+    except Exception as e:
+        raise HTTPException(status_code = 500, detail = f"An error occurred while processing the request: {str(e)}")
+@router.delete("/clear-vector-database")
+async def clear_vector_database():
+    """
+    Endpoint to clear the vector database collection, this will delete all the documents in the collection and reset the collection stats.
+    """
+    try:
+        vector_db = VectorDBService(persistent_directory="./chroma_db")
+        vector_db.clear_complete_collection()
+
+        return{
+            "success": True,
+            "message": "Vector database collection cleared successfully."
+        }
+    except Exception as e:
+        raise HTTPException(status_code = 500, detail = f"An error occurred while processing the request: {str(e)}")
