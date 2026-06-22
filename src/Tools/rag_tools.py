@@ -1,5 +1,6 @@
-"""Cortex RAG tools. This module defines the tools for the RAG agents.
-The tools are defined as functions in the MCP server and can be called by the agents to perform specific tasks related to RAG.
+"""Cortex RAG tools. This module defines CrewAI tools for the RAG agents.
+These tools can be called by agents to perform RAG-related tasks such as
+Confluence fetching and semantic document search.
 """
 
 from attr import fields

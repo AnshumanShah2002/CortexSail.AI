@@ -19,6 +19,9 @@ python-dotenv
 fastapi
 uvicorn
 
+# MCP Server
+fastmcp
+
 # Validation & Schemas
 pydantic
 
