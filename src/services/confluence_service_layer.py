@@ -23,6 +23,7 @@ class ConfluenceService:
         self.current_session_id = None
         self.conversation_memory = None
     
+    ##This declaration in the service layer is for UI/ RestAPI's, and its reference is being used in the mcp_server.py
     def user_prompt(self, query: str) -> Dict:
         """Analyse user query and determine if it requires Confluence interaction, then route to appropriate agent or tool"""
 

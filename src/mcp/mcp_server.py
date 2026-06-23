@@ -43,6 +43,7 @@ def health_check_vector_db_service_tool() -> dict:
             "error": str(e)
         }
 
+## user_prompt function: Extract session credentials, Initialize/check crew manager, Initialize conversation memory, Fetch conversation context, Get crew instance, Build LLM inputs, Execute crew kickoff, Extract output, Validate output, Parse task outputs, Store in memory, Return response, Handle errors
 @mcp.tool()
 def analyze_user_query_prompt(query: str) -> dict:
     """
@@ -58,6 +59,7 @@ def analyze_user_query_prompt(query: str) -> dict:
     try:
         #Keeping the success param as bool if the success comes as True, else default is False
         result = ConfluenceService().user_prompt(query.strip())
+        ##This response is only for the agent that is calling the agent not for all the services like rest / UI binding
         return {
             "success": bool(result.get("success", False)),
             "service": "confluence",
@@ -69,6 +71,39 @@ def analyze_user_query_prompt(query: str) -> dict:
             "success": False,
             "service": "confluence",
             "output": "",
+            "message": "Tool execution failed with error: " + str(e)
+        }
+
+@mcp.tool()
+def produce_word_document_from_markdown_tool(markdown_content: str, session_id: str) -> dict:
+    """
+    Generate a word document from markdown content and return the word file or the path URL, this tool will be used by the agent to generate a word document from markdown content"""
+
+    if not markdown_content or not markdown_content.strip():
+        return {
+            "success": False,
+            "service" : "confluence",
+            "output": "",
+            "message": "Markdown content is empty or invalid"
+        }
+    #change session id upon implementing the auth and session_id management for the agent, for now it is a default session id
+    if not session_id or not session_id.strip():
+        session_id = "default_session"
+    try:
+        result = ConfluenceService().produce_word_document_from_markdown(markdown_content.strip(), session_id.strip())
+        return {
+            "success": bool(result.get("success", False)),
+            "service": "confluence",
+            "filepath": result.get("output", ""),
+            "filename": result.get("filename", ""),
+            "message": result.get("message", "")
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "service": "confluence",
+            "filepath": "",
+            "filename": "",
             "message": "Tool execution failed with error: " + str(e)
         }
 
