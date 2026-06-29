@@ -91,6 +91,7 @@ knowledge_agent:
     - Return only retrieved evidence
   tools:
     - vector_search_tool
+    - confluence_fetch_tool
   retrieval_rules:
     - Use semantic similarity search only
     - Respect metadata filters when provided

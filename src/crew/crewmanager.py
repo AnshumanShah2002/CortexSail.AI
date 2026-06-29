@@ -10,6 +10,8 @@ from typing import Optional
 from typing import Dict, List
 from pathlib import Path
 from crewai_tools import MCPServerAdapter
+##Tools import for Agents
+from src.Tools.rag_tools import confluence_document_fetcher, similar_documents_fetcher
 
 load_dotenv()
 
@@ -59,12 +61,15 @@ class CrewManager:
                 ##temp storage var for agents
                 agents = {}
 
-                ###Initialize the tools in Tools folder then enable
-                all_tools = list(self.listed_mcp_tools)
-                
+                rag_tool_registry = {
+                    "vector_search_tool" : similar_documents_fetcher,
+                    "confluence_fetch_tool":confluence_document_fetcher
+                }
 
+                ### Giving the orchestrator agent a toolbox of both MCP and local tools (RAG tools) to manage the orchestration of the other agents
+                all_tools = list(self.listed_mcp_tools)    
                 ## MCP Tools + vector store tools 
-                
+                all_tools.append(similar_documents_fetcher)
 
                 ##Orchestration agent (MCP + vector store tools)
                 orchestrator_config  = agent_configuration["orchestrator_agent"]
@@ -85,19 +90,28 @@ class CrewManager:
                     verbose = orchestrator_config.get('verbose', True)
                 )
 
-
                 ##Knowledge agent (RAG tools)
                 knowledge_agent_configuration = agent_configuration["knowledge_agent"]
+
+                ##Adding the tools as a list of functions to the knowledge agent configuration - Cannot directly add the tools as a string
+                resolved_knowledge_tools_list = []
+                ###Validates the tools listed in the agents.yaml file against the rag_tool_registry and adds them to the resolved_knowledge_tools_list
+                for tool_name in knowledge_agent_configuration.get("tools",[]):
+                    callable_tool = rag_tool_registry.get(tool_name)
+                    if callable_tool is None:
+                        raise ValueError(f"Tool not found in the registry: {tool_name}")
+                    resolved_knowledge_tools_list.append(callable_tool)
+                        
                 agents['knowledge_agent'] = Agent(
                     role = knowledge_agent_configuration["role"],
                     goal = knowledge_agent_configuration["goal"],
                     backstory = knowledge_agent_configuration["backstory"],
-                    tools = knowledge_agent_configuration["tools"],
+                    # tools = knowledge_agent_configuration["tools"],
                     instructions = knowledge_agent_configuration["instructions"],
                     context = knowledge_agent_configuration["context"],
                     retrieval_rules = knowledge_agent_configuration["retrieval_rules"],
                     llm = self.llm,
-                    tools = knowledge_agent_configuration["tools"],
+                    tools = resolved_knowledge_tools_list,
                     output_contract = knowledge_agent_configuration["output_contract"],
                     verbose = knowledge_agent_configuration.get('verbose', True),
                     guardrails = knowledge_agent_configuration["guardrails"],
