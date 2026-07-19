@@ -7,9 +7,8 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from pydantic import BaseSettings, Field
-from configuration.settings import Settings
-
-
+# removing this import as the Settings class is already defined in this file, and importing it again would cause a circular import error.
+# from configuration.settings import Settings
 
 class Settings(BaseSettings):
 
@@ -19,6 +18,11 @@ class Settings(BaseSettings):
     # confluence_password: str = "####"
     # confluence_base_url: str = "####"
     # epic_key: str = "####"
+
+    ##Defining the API settings for the FastAPI application 
+    api_host: str  = "####"
+    api_port: int = 8000
+    api_reload: bool = True
 
     ## Environ variables for usage azure model
     azure_api_key: str = "####"
@@ -81,8 +85,9 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitivity = False
-        
-    def boot_settings(self) -> Settings:
+    
+    ##Quoting Settings object to make sure that the Settings return from the same file here
+    def boot_settings(self) -> "Settings":
         try:
             load_dotenv()
             settings = Settings()

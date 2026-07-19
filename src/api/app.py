@@ -1,6 +1,7 @@
 """FastAPI config to be called from main.py"""
 
-from crewai.flow import router
+# from crewai.flow import router
+from src.api.routes import router
 from fastapi import FastAPI
 
 def create_app() -> FastAPI:
@@ -13,8 +14,8 @@ def create_app() -> FastAPI:
 
     ##Including the service layer routers for handling specific functionalities
     app.include_router(router)
-    return app
 
+    ## fixed early return of the app instance we need to add a health check endpoint to the app instance before returning it not after the return statement
     @app.get("/health-check")
     def health_check():
         return {"status": "API is healthy"}

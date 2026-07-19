@@ -4,16 +4,12 @@ API / Controller layer for CortexSail Agentic RAG system. This module defines th
 ###we use methods defined in the redis_session_manager adn perform actions by passing the required parameters to perform actions on redis related methods
 
 import os
-
 from fastapi import APIRouter, HTTPException, Response, Request, Cookie
 from typing import Optional
 from pathlib import Path
 
 from fastapi.responses import FileResponse
-from src.model.models import ConfluenceUserLoginCredentialsModel, HealthCheckResponseModel, RAGQueryRequest, RAGResponse, DocumentIngestRequest, DocumentIngestResponse, RAGFilters, RequestModelConfluenceAnalyzeDocumentTask, SourceDocument, ConfluenceDocumentFilter, ConfluenceDocumentAnalysisModel,ConfluenceDocumentAnalysisResultModel, WordDocumentGenerationRequestModel
-RequestModelConfluenceAnalyzeDocumentTask,
-HealthCheckResponseModel,
-ConfluenceUserLoginCredentialsModel,
+from src.model.models import ConfluenceUserLoginCredentialsModel, HealthCheckResponseModel, RAGQueryRequest, RAGResponse, DocumentIngestRequest, DocumentIngestResponse, RAGFilters, RequestModelConfluenceAnalyzeDocumentTask, SourceDocument, ConfluenceDocumentFilter, ConfluenceDocumentAnalysisModel, ConfluenceDocumentAnalysisResultModel, WordDocumentGenerationRequestModel
 
 ###Write the service layer first before using it with API layer, this is to ensure separation of concerns and maintain a clean architecture. The service layer will handle the business logic and interactions with external systems, while the API layer will focus on handling HTTP requests and responses.
 from src.redis.redis_session_manager import ConfluenceSessionManager
