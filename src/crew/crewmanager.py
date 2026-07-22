@@ -17,7 +17,7 @@ load_dotenv()
 
 ####Check if agent init is correct
 class CrewManager:
-    def __init__(self, agent_config_path: str, session_id: Optional[str] = None):
+    def __init__(self, agent_config_path: Optional[str] = None, session_id: Optional[str] = None):
         ##current directory parent folder path
         self.crew_dir = Path(__file__).parent
         self.agent_config_path = agent_config_path
@@ -29,14 +29,19 @@ class CrewManager:
         ##Private to prevent the memory() call from other files and functions
         self._conversation_memory()
 
-        # def _conversation_memory(self):
-        #     try:
-        #         ###Conditional Memory flag check###
-        #         if settings.short_term_memory_flag or settings.long_term_memory_flag:
-
-        #     except Exception as e:
-        #         print(f"Error occured as :{e}")
-
+    def _conversation_memory(self):
+            """Setting up memory storage directory"""
+            try:
+                if settings.short_term_memory_flag or settings.long_term_memory_flag:
+                    memory_path = Path(settings.memory_storage_path)
+                    if self.session_id:
+                        ##Creating memory directory
+                        memory_path = memory_path / self.session_id
+                    memory_path.mkdir(parents=True, exist_ok=True)
+                    print(f"Memory storage directory set up at: {memory_path}")
+            except Exception as e:
+                print(f"Error occurred while setting up memory storage directory: {e}")
+                raise
     def initialize_llm(self):
         try:
             llm = LLM(
@@ -73,7 +78,7 @@ class CrewManager:
 
                 ##Orchestration agent (MCP + vector store tools)
                 orchestrator_config  = agent_configuration["orchestrator_agent"]
-                agents["orchestation_agent"] = Agent(
+                agents["orchestration_agent"] = Agent(
                     role = orchestrator_config["role"],
                     goal = orchestrator_config["goal"],
                     backstory = orchestrator_config["backstory"],
@@ -185,7 +190,7 @@ class CrewManager:
                 orchestrator_task_configuration = task_configuration["task_orchestrate"]
                 tasks["task_orchestrate"] = Task(
                     description=orchestrator_task_configuration["description"],
-                    agent=self.agents["orchestation_agent"],
+                    agent=self.agents["orchestration_agent"],
                     expected_output = orchestrator_task_configuration["expected_output"],
                     #Check if this is the last output that we want or are we passing this output to any other agent for further processing, if output is final then we can directly return the output to the user from the service layer, if not, then we can pass the output to the next agent for further processing until we get the final output that we want to return to the user
                     # output_json=self.agents['orchestrator_agent']
@@ -200,21 +205,24 @@ class CrewManager:
                 )
 
                 #Reason over evidence task
-                reasoning_task_configuration = task_configuration["task_reasoning_over_evidence"] = Task(
+                reasoning_task_configuration = task_configuration["task_reasoning_over_evidence"]
+                tasks["task_reasoning_over_evidence"] = Task(
                     description=reasoning_task_configuration["description"],
                     agent=self.agents["reasoning_agent"],
                     expected_output=reasoning_task_configuration["expected_output"],
                 )
 
                 #Memory sync task
-                memory_sync_task_configuration = task_configuration["task_memory_sync"] = Task(
+                memory_sync_task_configuration = task_configuration["task_memory_sync"]
+                tasks["task_memory_sync"] = Task(
                     description=memory_sync_task_configuration["description"],
                     agent=self.agents["memory_agent"],
                     expected_output=memory_sync_task_configuration["expected_output"],
                 )
 
                 #Response formatting task
-                response_formatting_task_configuration = task_configuration["task_format_response"] = Task(
+                response_formatting_task_configuration = task_configuration["task_format_response"] 
+                tasks["task_format_response"] = Task(
                     description=response_formatting_task_configuration["description"],
                     agent=self.agents["response_agent"],
                     expected_output=response_formatting_task_configuration["expected_output"],
@@ -245,16 +253,18 @@ class CrewManager:
                 if settings.long_term_memory_flag:
                     memory_configuration["long_term_memory"] = LongTermMemory()
                     print(f"Long-term memory enabled for the session {self.session_id}")
+            ##Fixed returning the crew instance with the agents and the tasks, and the memory configuration - Crew Agents, Tasks, Memory Instance
             crew_instance = Crew(
-                agents = [self.agents["orchestation_agent"],
+                agents = [self.agents["orchestration_agent"],
                 self.agents["knowledge_agent"],
                 self.agents["reasoning_agent"],
                 self.agents["memory_agent"],
                 self.agents["response_agent"]],
 
-                tasks = [self.tasks["task_orchestrate"], self.tasks["task_retrieve_knowledge"], self.tasks["task_retrieve_over_evidence"], self.tasks["task_memory_sync"],["task_format_response"],],
+                tasks = [self.tasks["task_orchestrate"], self.tasks["task_retrieve_knowledge"], self.tasks["task_reasoning_over_evidence"], self.tasks["task_memory_sync"], self.tasks["task_format_response"]],
                 **memory_configuration
             )
+            return crew_instance
         except Exception as e:
             print(f"Error occured while setting up the crew instance: {e}")
 

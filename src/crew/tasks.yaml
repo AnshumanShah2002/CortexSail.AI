@@ -73,7 +73,7 @@ expected_output: >
 		}
 	agent: knowledge_agent
 
-task_reason_over_evidence:
+task_reasoning_over_evidence:
 	description: >
 		Analyze retrieved evidence from task_retrieve_knowledge and produce a
 		structured policy conclusion.

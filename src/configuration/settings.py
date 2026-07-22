@@ -43,9 +43,10 @@ class Settings(BaseSettings):
     model_max_tokens = 1000
 
 
-    ### memory flag ###
+    ### memory flag and configuration###
     short_term_memory_flag:bool = True
     long_term_memory_flag:bool = True
+    memory_storage_path: str = "./memory_storage"
 
     ###MCP config
     mcp_endpoint: str = Field(

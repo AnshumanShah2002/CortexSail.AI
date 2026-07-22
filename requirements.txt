@@ -46,3 +46,6 @@ redis
 
 #Document processing
 python-docx
+
+##CrewAI tool
+crewai-tools
