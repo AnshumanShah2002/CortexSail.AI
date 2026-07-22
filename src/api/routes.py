@@ -53,6 +53,8 @@ async def analyze_Confluence_document_task(
         )
 
         return ConfluenceDocumentAnalysisModel(response_answer = confluence_analysis_result)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code = 500, detail=f"An error occurred while processing the request: {str(e)}")
 @router.get("/healthcheck", response_model = HealthCheckResponseModel)
@@ -142,6 +144,8 @@ async def generate_word_document_definition(request: WordDocumentGenerationReque
             }
         else:
             raise HTTPException(status_code = 500, detail = f"Failed to generate word document")
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error in /generate-word-document endpoint: {str(e)}")
         raise HTTPException(status_code = 500, detail = f"An error occurred while processing the request: {str(e)}")
@@ -164,6 +168,8 @@ async def download_word_document(filename: str, session_id: str = Cookie(None)):
             filename = filename,
             media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error in /download-word-document endpoint: {str(e)}")
         raise HTTPException(status_code = 500, detail = f"An error occurred while processing the request: {str(e)}")
