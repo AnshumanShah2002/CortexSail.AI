@@ -42,10 +42,8 @@ async def analyze_Confluence_document_task(
     try:
         if not request.query.strip():
             raise HTTPException(status_code = 400, detail="Query cannot be empty.")
-
-
-        result = await confluence_service_instance.user_prompt(request.query)
-
+        ##Marking the service function call as async as child are sync definitions, might need change later
+        result = confluence_service_instance.user_prompt(request.query)
         confluence_analysis_result = ConfluenceDocumentAnalysisResultModel(
             success = result["success"],
             output = result["output"],
@@ -134,7 +132,8 @@ async def generate_word_document_definition(request: WordDocumentGenerationReque
     try:
         if not session_id:
             raise HTTPException(status_code = 401, detail = "Invalid session, please login to create a session and try again.")
-        result = await confluence_service_instance.produce_word_document_from_markdown(markdown_content=request.generated_content, session_id=session_id)
+        #marking the service function call as async as child are sync definitions, might need change later
+        result = confluence_service_instance.produce_word_document_from_markdown(markdown_content=request.generated_content, session_id=session_id)
 
         if result["success"]:
             return {
@@ -202,25 +201,23 @@ async def load_vector_database(csv_path: Optional[str] = None):
             csv_path = str(max(csv_files, key = lambda p:p.stat().st_mtime))
             print(f"Using the CSV file {csv_path}")
 
-            if not Path(csv_path).exists():
-                raise HTTPException(status_code = 404, detail = f"CSV file not found at the specified path: {csv_path}")
-            else:
-                loaded_records = vector_db.upload_csv_content(csv_path)
+        if not Path(csv_path).exists():
+            raise HTTPException(status_code = 404, detail = f"CSV file not found at the specified path: {csv_path}")
+        ##If file exist then this is automatically executed
+        loaded_records = vector_db.upload_csv_content(csv_path)
 
-                ##ChromaDB function defined in service layer- get_collection_stats() to get the number of records in the collection after loading the data from the CSV file.
-
-                collection_stats = vector_db.get_collection_details()
-                
-                ##returning dict for frontend
-
-                return {
-                    "success": True,
-                    "message": f"Vector database loaded successfully with data from {csv_path}",
-                    "loaded_records": loaded_records,
-                    "number_of_documents": collection_stats.get("number_of_documents",0),
-                    "collection_name": collection_stats.get("collection_name",""),
-                    "csv_file": csv_path
-                }
+        ##ChromaDB function defined in service layer- get_collection_stats() to get the number of records in the collection after loading the data from the CSV file.
+        collection_stats = vector_db.get_collection_details()
+        
+        ##returning dict for frontend
+        return {
+            "success": True,
+            "message": f"Vector database loaded successfully with data from {csv_path}",
+            "loaded_records": loaded_records,
+            "number_of_documents": collection_stats.get("number_of_documents",0),
+            "collection_name": collection_stats.get("collection_name",""),
+            "csv_file": csv_path
+        }
     except HTTPException:
         raise
     except Exception as e:
